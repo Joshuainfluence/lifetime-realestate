@@ -224,4 +224,49 @@ class Property
             return [];
         }
     }
+
+       /**
+     * Get Property by ID with Full Details
+     * 
+     * Retrieves a single property with all related information
+     * 
+     * @param int $id Property ID
+     * @return array|false Property data or false if not found
+     */
+    public function getById($id) {
+        try {
+            $query = "SELECT p.*, 
+                      c.name as category_name, 
+                      c.icon as category_icon,
+                      c.description as category_description,
+                      u.full_name as agent_name, 
+                      u.phone as agent_phone,
+                      u.email as agent_email,
+                      u.id as agent_id
+                      FROM {$this->table} p 
+                      LEFT JOIN categories c ON p.category_id = c.id 
+                      LEFT JOIN users u ON p.created_by = u.id 
+                      WHERE p.id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $property = $stmt->fetch();
+            
+            // If property found, add additional calculated fields
+            if ($property) {
+                $property['price_per_sqm'] = $property['area'] > 0 ? 
+                    round($property['price'] / $property['area'], 2) : 0;
+                $property['is_featured'] = (bool)$property['featured'];
+                $property['formatted_price'] = '$' . number_format($property['price'], 2);
+            }
+            
+            return $property;
+            
+        } catch (PDOException $e) {
+            error_log("Get property error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
