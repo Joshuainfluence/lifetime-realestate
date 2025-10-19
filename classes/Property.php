@@ -355,4 +355,9 @@ class Property
         $filters = ['featured' => 1, 'status' => 'available'];
         return $this->getAll($filters, $limit, 0, 'created_at', 'DESC');
     }
+
+    // get latest properties
+    public function getLatest($limit = 10){
+        return $this->getAll([], $limit, 0, 'created_at', 'DESC');
+    }
 }
