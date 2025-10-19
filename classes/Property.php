@@ -98,7 +98,8 @@ class Property
     }
 
     // Get all properties with advanced filtering
-    public function getAll($filters = [], $limit = 10, $offset = 0, $orderBy = 'created_at', $orderDir = 'DESC'){
+    public function getAll($filters = [], $limit = 10, $offset = 0, $orderBy = 'created_at', $orderDir = 'DESC')
+    {
         try {
             // Base query with join to get related data
             $query = "SELECT p.*, 
@@ -119,21 +120,19 @@ class Property
             if (!empty($filters['category'])) {
                 $query .= " AND p.category_id = :category";
                 $params[':category'] = $filters['category'];
-
             }
 
             // property type filter (sale/rent)
             if (!empty($filters['type'])) {
                 $query .= " AND p.property_type = :type";
                 $params[':type'] = $filters['type'];
-
             }
 
             // status filter
             if (isset($filters['status'])) {
                 $query .= " AND p.status = :status";
                 $params[':status'] = $filters['status'];
-            }else{
+            } else {
                 // By default only show available properties
                 $query .= " AND p.status = 'available";
             }
@@ -143,36 +142,36 @@ class Property
                 $query .= " AND p.featured = :featured";
                 $params[':featured'] = $filters['featured'];
             }
-            
+
             // Price range filters
             if (!empty($filters['price_min'])) {
                 $query .= " AND p.price >= :price_min";
                 $params[':price_min'] = $filters['price_min'];
             }
-            
+
             if (!empty($filters['price_max'])) {
                 $query .= " AND p.price <= :price_max";
                 $params[':price_max'] = $filters['price_max'];
             }
-            
+
             // Bedrooms filter
             if (!empty($filters['bedrooms'])) {
                 $query .= " AND p.bedrooms >= :bedrooms";
                 $params[':bedrooms'] = $filters['bedrooms'];
             }
-            
+
             // Bathrooms filter
             if (!empty($filters['bathrooms'])) {
                 $query .= " AND p.bathrooms >= :bathrooms";
                 $params[':bathrooms'] = $filters['bathrooms'];
             }
-            
+
             // Area range filters
             if (!empty($filters['area_min'])) {
                 $query .= " AND p.area >= :area_min";
                 $params[':area_min'] = $filters['area_min'];
             }
-            
+
             if (!empty($filters['area_max'])) {
                 $query .= " AND p.area <= :area_max";
                 $params[':area_max'] = $filters['area_max'];
@@ -185,47 +184,46 @@ class Property
                 OR p.location LIKE :search 
                 OR p.address LIKE :search)";
 
-                $params[':search'] = '%'. $filters['search'] . '%';
+                $params[':search'] = '%' . $filters['search'] . '%';
             }
 
-             // Validate and sanitize ORDER BY to prevent SQL injection
+            // Validate and sanitize ORDER BY to prevent SQL injection
             $allowedOrderFields = ['created_at', 'price', 'title', 'bedrooms', 'bathrooms', 'area'];
             if (!in_array($orderBy, $allowedOrderFields)) {
                 $orderBy = 'created_at';
             }
-            
+
             // Validate order direction
             $orderDir = strtoupper($orderDir) === 'ASC' ? 'ASC' : 'DESC';
-            
+
             // Add ordering
             $query .= " ORDER BY p.{$orderBy} {$orderDir}";
-            
+
             // Add pagination
             $query .= " LIMIT :limit OFFSET :offset";
-            
+
             // Prepare statement
             $stmt = $this->conn->prepare($query);
 
             // bind filter parameters
             foreach ($params as $key => $value) {
-                $stmt-> bindValue($key, $value);
+                $stmt->bindValue($key, $value);
             }
 
             // Bind pagination parameters (must be integers)
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-            
-            $stmt->execute();
-            
-            return $stmt->fetchAll();
 
+            $stmt->execute();
+
+            return $stmt->fetchAll();
         } catch (PDOException $th) {
             error_log("Get property error: " . $th->getMessage());
             return [];
         }
     }
 
-       /**
+    /**
      * Get Property by ID with Full Details
      * 
      * Retrieves a single property with all related information
@@ -233,7 +231,8 @@ class Property
      * @param int $id Property ID
      * @return array|false Property data or false if not found
      */
-    public function getById($id) {
+    public function getById($id)
+    {
         try {
             $query = "SELECT p.*, 
                       c.name as category_name, 
@@ -247,23 +246,22 @@ class Property
                       LEFT JOIN categories c ON p.category_id = c.id 
                       LEFT JOIN users u ON p.created_by = u.id 
                       WHERE p.id = :id";
-            
+
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-            
+
             $property = $stmt->fetch();
-            
+
             // If property found, add additional calculated fields
             if ($property) {
-                $property['price_per_sqm'] = $property['area'] > 0 ? 
+                $property['price_per_sqm'] = $property['area'] > 0 ?
                     round($property['price'] / $property['area'], 2) : 0;
                 $property['is_featured'] = (bool)$property['featured'];
                 $property['formatted_price'] = '$' . number_format($property['price'], 2);
             }
-            
+
             return $property;
-            
         } catch (PDOException $e) {
             error_log("Get property error: " . $e->getMessage());
             return false;
@@ -271,7 +269,8 @@ class Property
     }
 
     // update property
-     public function update($id, $data) {
+    public function update($id, $data)
+    {
         try {
             // Build dynamic update query
             $query = "UPDATE {$this->table} SET 
@@ -287,16 +286,16 @@ class Property
                       address = :address,
                       featured = :featured,
                       status = :status";
-            
+
             // Only update image if new one is provided
             if (!empty($data['image'])) {
                 $query .= ", image = :image";
             }
-            
+
             $query .= " WHERE id = :id";
-            
+
             $stmt = $this->conn->prepare($query);
-            
+
             // Bind parameters
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->bindParam(':title', $data['title']);
@@ -311,13 +310,12 @@ class Property
             $stmt->bindParam(':address', $data['address']);
             $stmt->bindParam(':featured', $data['featured'], PDO::PARAM_INT);
             $stmt->bindParam(':status', $data['status']);
-            
+
             if (!empty($data['image'])) {
                 $stmt->bindParam(':image', $data['image']);
             }
-            
+
             return $stmt->execute();
-            
         } catch (PDOException $e) {
             error_log("Update property error: " . $e->getMessage());
             return false;
@@ -326,24 +324,24 @@ class Property
 
 
     // delete property
-    public function delete($id) {
+    public function delete($id)
+    {
         try {
             // First get the property to delete its image
             $property = $this->getById($id);
-            
+
             // Delete from database
             $query = "DELETE FROM {$this->table} WHERE id = :id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $result = $stmt->execute();
-            
+
             // Delete image file if exists
             if ($result && $property && !empty($property['image'])) {
                 $this->deletePropertyImage($property['image']);
             }
-            
+
             return $result;
-            
         } catch (PDOException $e) {
             error_log("Delete property error: " . $e->getMessage());
             return false;
@@ -351,13 +349,62 @@ class Property
     }
 
     // get featured properties
-    public function getFeatured($limit = 6){
+    public function getFeatured($limit = 6)
+    {
         $filters = ['featured' => 1, 'status' => 'available'];
         return $this->getAll($filters, $limit, 0, 'created_at', 'DESC');
     }
 
     // get latest properties
-    public function getLatest($limit = 10){
+    public function getLatest($limit = 10)
+    {
         return $this->getAll([], $limit, 0, 'created_at', 'DESC');
+    }
+
+
+    /**
+     * Get Similar Properties
+     * 
+     * Finds properties similar to the given property
+     * Based on category and price range
+     * 
+     * @param int $propertyId Current property ID
+     * @param int $limit Number of similar properties to return
+     * @return array Array of similar properties
+     */
+    public function getSimilar($propertyId, $limit = 4)
+    {
+        try {
+            $property = $this->getById($propertyId);
+            if (!$property) return [];
+
+            // Find properties in same category with similar price (+/- 30%)
+            $priceMin = $property['price'] * 0.7;
+            $priceMax = $property['price'] * 1.3;
+
+            $query = "SELECT p.*, c.name as category_name 
+                      FROM {$this->table} p 
+                      LEFT JOIN categories c ON p.category_id = c.id 
+                      WHERE p.id != :id 
+                      AND p.category_id = :category_id 
+                      AND p.price BETWEEN :price_min AND :price_max
+                      AND p.status = 'available'
+                      ORDER BY ABS(p.price - :target_price)
+                      LIMIT :limit";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $propertyId, PDO::PARAM_INT);
+            $stmt->bindParam(':category_id', $property['category_id'], PDO::PARAM_INT);
+            $stmt->bindParam(':price_min', $priceMin);
+            $stmt->bindParam(':price_max', $priceMax);
+            $stmt->bindParam(':target_price', $property['price']);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Get similar properties error: " . $e->getMessage());
+            return [];
+        }
     }
 }
