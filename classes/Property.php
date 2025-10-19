@@ -687,4 +687,27 @@ class Property
         return $deleted;
     }
 
+    /**
+     * Bulk Update Status
+     * 
+     * Updates status for multiple properties
+     * 
+     * @param array $ids Array of property IDs
+     * @param string $status New status
+     * @return int Number of properties updated
+     */
+    public function bulkUpdateStatus($ids, $status) {
+        if (empty($ids) || !is_array($ids)) {
+            return 0;
+        }
+        
+        $updated = 0;
+        foreach ($ids as $id) {
+            if ($this->updateStatus($id, $status)) {
+                $updated++;
+            }
+        }
+        
+        return $updated;
+    }
 }
