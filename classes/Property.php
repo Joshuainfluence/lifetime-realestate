@@ -477,4 +477,66 @@ class Property
         }
     }
 
+
+
+     /**
+     * Get Property Statistics
+     * 
+     * Returns various statistics about properties
+     * 
+     * @return array Statistics data
+     */
+    public function getStatistics() {
+        try {
+            $stats = [];
+            
+            // Total properties
+            $stats['total'] = $this->count(['status' => null]);
+            
+            // Available properties
+            $stats['available'] = $this->count(['status' => 'available']);
+            
+            // Sold properties
+            $stats['sold'] = $this->count(['status' => 'sold']);
+            
+            // Rented properties
+            $stats['rented'] = $this->count(['status' => 'rented']);
+            
+            // Featured properties
+            $stats['featured'] = $this->count(['featured' => 1]);
+            
+            // Average price
+            $query = "SELECT AVG(price) as avg_price FROM {$this->table}";
+            $stmt = $this->conn->query($query);
+            $result = $stmt->fetch();
+            $stats['average_price'] = round($result['avg_price'], 2);
+            
+            // Price range
+            $query = "SELECT MIN(price) as min_price, MAX(price) as max_price FROM {$this->table}";
+            $stmt = $this->conn->query($query);
+            $result = $stmt->fetch();
+            $stats['min_price'] = $result['min_price'];
+            $stats['max_price'] = $result['max_price'];
+            
+            // Properties by type
+            $query = "SELECT property_type, COUNT(*) as count FROM {$this->table} GROUP BY property_type";
+            $stmt = $this->conn->query($query);
+            $stats['by_type'] = $stmt->fetchAll();
+            
+            // Properties by category
+            $query = "SELECT c.name, COUNT(p.id) as count 
+                      FROM {$this->table} p 
+                      LEFT JOIN categories c ON p.category_id = c.id 
+                      GROUP BY p.category_id, c.name";
+            $stmt = $this->conn->query($query);
+            $stats['by_category'] = $stmt->fetchAll();
+            
+            return $stats;
+            
+        } catch (PDOException $e) {
+            error_log("Get statistics error: " . $e->getMessage());
+            return [];
+        }
+    }
+
 }
