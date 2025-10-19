@@ -589,4 +589,58 @@ class Property
     }
 
 
+    /**
+     * Handle Image Upload
+     * 
+     * Uploads and validates property image
+     * 
+     * @param array $file $_FILES array element
+     * @return string|false Image filename on success, false on failure
+     */
+    public function uploadImage($file) {
+        // Check if file was uploaded
+        if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
+            return false;
+        }
+        
+        // Validate file size
+        if ($file['size'] > $this->maxFileSize) {
+            error_log("File too large: " . $file['size']);
+            return false;
+        }
+        
+        // Validate file type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        if (!in_array($mimeType, $this->allowedImageTypes)) {
+            error_log("Invalid file type: " . $mimeType);
+            return false;
+        }
+        
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('property_', true) . '.' . $extension;
+        
+        // Upload directory
+        $uploadDir = __DIR__ . '/../assets/uploads/properties/';
+        
+        // Create directory if it doesn't exist
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $destination = $uploadDir . $filename;
+        
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            // Optionally resize/optimize image here
+            return $filename;
+        }
+        
+        return false;
+    }
+
+
 }
