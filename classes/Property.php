@@ -97,7 +97,22 @@ class Property
         }
     }
 
+
+
     // Get all properties with advanced filtering
+      /**
+     * Get All Properties with Advanced Filtering
+     * 
+     * Supports multiple filters including search, category, price range, etc.
+     * Includes pagination support
+     * 
+     * @param array $filters Associative array of filter options
+     * @param int $limit Number of results to return
+     * @param int $offset Starting position for pagination
+     * @param string $orderBy Field to order by (default: created_at)
+     * @param string $orderDir Order direction (ASC or DESC)
+     * @return array Array of property objects
+     */
     public function getAll($filters = [], $limit = 10, $offset = 0, $orderBy = 'created_at', $orderDir = 'DESC')
     {
         try {
@@ -407,4 +422,59 @@ class Property
             return [];
         }
     }
+
+    /**
+     * Count Total Properties
+     * 
+     * Returns total number of properties with optional filters
+     * Used for pagination calculations
+     * 
+     * @param array $filters Optional filters
+     * @return int Total count
+     */
+    public function count($filters = []) {
+        try {
+            $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE 1=1";
+            $params = [];
+            
+            // Apply same filters as getAll()
+            if (!empty($filters['category'])) {
+                $query .= " AND category_id = :category";
+                $params[':category'] = $filters['category'];
+            }
+            
+            if (!empty($filters['type'])) {
+                $query .= " AND property_type = :type";
+                $params[':type'] = $filters['type'];
+            }
+            
+            if (isset($filters['status'])) {
+                $query .= " AND status = :status";
+                $params[':status'] = $filters['status'];
+            } else {
+                $query .= " AND status = 'available'";
+            }
+            
+            if (!empty($filters['search'])) {
+                $query .= " AND (title LIKE :search OR description LIKE :search OR location LIKE :search)";
+                $params[':search'] = '%' . $filters['search'] . '%';
+            }
+            
+            $stmt = $this->conn->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->fetch();
+            
+            return (int)$result['total'];
+            
+        } catch (PDOException $e) {
+            error_log("Count properties error: " . $e->getMessage());
+            return 0;
+        }
+    }
+
 }
