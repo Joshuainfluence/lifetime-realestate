@@ -96,4 +96,132 @@ class Property
             return false;
         }
     }
+
+    // Get all properties with advanced filtering
+    public function getAll($filters = [], $limit = 10, $offset = 0, $orderBy = 'created_at', $orderDir = 'DESC'){
+        try {
+            // Base query with join to get related data
+            $query = "SELECT p.*, 
+            c.name as category_name, 
+            c.icon as category_icon,
+            u.full_name as agent_name, 
+            u.phone as agent_phone,
+            u.email as agent_email
+            FROM {$this->table} p 
+            LEFT JOIN categories c ON p.category_id = c.id
+            LEFT JOIN users u ON p.created_by = u.id 
+            WHERE 1 = 1;
+            ";
+
+            $params = [];
+
+            // category filter
+            if (!empty($filters['category'])) {
+                $query .= " AND p.category_id = :category";
+                $params[':category'] = $filters['category'];
+
+            }
+
+            // property type filter (sale/rent)
+            if (!empty($filters['type'])) {
+                $query .= " AND p.property_type = :type";
+                $params[':type'] = $filters['type'];
+
+            }
+
+            // status filter
+            if (isset($filters['status'])) {
+                $query .= " AND p.status = :status";
+                $params[':status'] = $filters['status'];
+            }else{
+                // By default only show available properties
+                $query .= " AND p.status = 'available";
+            }
+
+            // Featured filter
+            if (isset($filters['featured'])) {
+                $query .= " AND p.featured = :featured";
+                $params[':featured'] = $filters['featured'];
+            }
+            
+            // Price range filters
+            if (!empty($filters['price_min'])) {
+                $query .= " AND p.price >= :price_min";
+                $params[':price_min'] = $filters['price_min'];
+            }
+            
+            if (!empty($filters['price_max'])) {
+                $query .= " AND p.price <= :price_max";
+                $params[':price_max'] = $filters['price_max'];
+            }
+            
+            // Bedrooms filter
+            if (!empty($filters['bedrooms'])) {
+                $query .= " AND p.bedrooms >= :bedrooms";
+                $params[':bedrooms'] = $filters['bedrooms'];
+            }
+            
+            // Bathrooms filter
+            if (!empty($filters['bathrooms'])) {
+                $query .= " AND p.bathrooms >= :bathrooms";
+                $params[':bathrooms'] = $filters['bathrooms'];
+            }
+            
+            // Area range filters
+            if (!empty($filters['area_min'])) {
+                $query .= " AND p.area >= :area_min";
+                $params[':area_min'] = $filters['area_min'];
+            }
+            
+            if (!empty($filters['area_max'])) {
+                $query .= " AND p.area <= :area_max";
+                $params[':area_max'] = $filters['area_max'];
+            }
+
+            // search filter - searches in title, description, location, and address
+            if (!empty($filters['search'])) {
+                $query .= " AND (p.title LIKE :search 
+                OR p.description LIKE :search 
+                OR p.location LIKE :search 
+                OR p.address LIKE :search)";
+
+                $params[':search'] = '%'. $filters['search'] . '%';
+            }
+
+             // Validate and sanitize ORDER BY to prevent SQL injection
+            $allowedOrderFields = ['created_at', 'price', 'title', 'bedrooms', 'bathrooms', 'area'];
+            if (!in_array($orderBy, $allowedOrderFields)) {
+                $orderBy = 'created_at';
+            }
+            
+            // Validate order direction
+            $orderDir = strtoupper($orderDir) === 'ASC' ? 'ASC' : 'DESC';
+            
+            // Add ordering
+            $query .= " ORDER BY p.{$orderBy} {$orderDir}";
+            
+            // Add pagination
+            $query .= " LIMIT :limit OFFSET :offset";
+            
+            // Prepare statement
+            $stmt = $this->conn->prepare($query);
+
+            // bind filter parameters
+            foreach ($params as $key => $value) {
+                $stmt-> bindValue($key, $value);
+            }
+
+            // Bind pagination parameters (must be integers)
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
+            
+            return $stmt->fetchAll();
+
+        } catch (PDOException $th) {
+            error_log("Get property error: " . $th->getMessage());
+            return [];
+        }
+    }
 }
