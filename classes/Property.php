@@ -323,4 +323,30 @@ class Property
             return false;
         }
     }
+
+
+    // delete property
+    public function delete($id) {
+        try {
+            // First get the property to delete its image
+            $property = $this->getById($id);
+            
+            // Delete from database
+            $query = "DELETE FROM {$this->table} WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            
+            // Delete image file if exists
+            if ($result && $property && !empty($property['image'])) {
+                $this->deletePropertyImage($property['image']);
+            }
+            
+            return $result;
+            
+        } catch (PDOException $e) {
+            error_log("Delete property error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
