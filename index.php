@@ -1,15 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
 <?php
 /**
  * Homepage - index.php
