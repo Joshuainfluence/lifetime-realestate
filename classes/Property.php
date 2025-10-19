@@ -662,4 +662,29 @@ class Property
         
         return false;
     }
+
+
+    /**
+     * Bulk Delete Properties
+     * 
+     * Deletes multiple properties at once
+     * 
+     * @param array $ids Array of property IDs
+     * @return int Number of properties deleted
+     */
+    public function bulkDelete($ids) {
+        if (empty($ids) || !is_array($ids)) {
+            return 0;
+        }
+        
+        $deleted = 0;
+        foreach ($ids as $id) {
+            if ($this->delete($id)) {
+                $deleted++;
+            }
+        }
+        
+        return $deleted;
+    }
+
 }
