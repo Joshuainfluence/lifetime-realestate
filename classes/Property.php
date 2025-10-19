@@ -539,4 +539,25 @@ class Property
         }
     }
 
+
+     /**
+     * Toggle Featured Status
+     * 
+     * Marks/unmarks a property as featured
+     * 
+     * @param int $id Property ID
+     * @return bool True on success, false on failure
+     */
+    public function toggleFeatured($id) {
+        try {
+            $query = "UPDATE {$this->table} SET featured = NOT featured WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Toggle featured error: " . $e->getMessage());
+            return false;
+        }
+    }
+
 }
