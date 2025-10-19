@@ -643,4 +643,23 @@ class Property
     }
 
 
+    /**
+     * Delete Property Image
+     * 
+     * Removes image file from server
+     * 
+     * @param string $filename Image filename
+     * @return bool True on success, false on failure
+     */
+    public function deletePropertyImage($filename) {
+        if (empty($filename)) return false;
+        
+        $filepath = __DIR__ . '/../assets/uploads/properties/' . $filename;
+        
+        if (file_exists($filepath)) {
+            return unlink($filepath);
+        }
+        
+        return false;
+    }
 }
