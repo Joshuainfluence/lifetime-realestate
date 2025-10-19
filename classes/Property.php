@@ -269,4 +269,58 @@ class Property
             return false;
         }
     }
+
+    // update property
+     public function update($id, $data) {
+        try {
+            // Build dynamic update query
+            $query = "UPDATE {$this->table} SET 
+                      title = :title,
+                      description = :description,
+                      price = :price,
+                      category_id = :category_id,
+                      property_type = :property_type,
+                      bedrooms = :bedrooms,
+                      bathrooms = :bathrooms,
+                      area = :area,
+                      location = :location,
+                      address = :address,
+                      featured = :featured,
+                      status = :status";
+            
+            // Only update image if new one is provided
+            if (!empty($data['image'])) {
+                $query .= ", image = :image";
+            }
+            
+            $query .= " WHERE id = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            
+            // Bind parameters
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':title', $data['title']);
+            $stmt->bindParam(':description', $data['description']);
+            $stmt->bindParam(':price', $data['price']);
+            $stmt->bindParam(':category_id', $data['category_id'], PDO::PARAM_INT);
+            $stmt->bindParam(':property_type', $data['property_type']);
+            $stmt->bindParam(':bedrooms', $data['bedrooms'], PDO::PARAM_INT);
+            $stmt->bindParam(':bathrooms', $data['bathrooms'], PDO::PARAM_INT);
+            $stmt->bindParam(':area', $data['area']);
+            $stmt->bindParam(':location', $data['location']);
+            $stmt->bindParam(':address', $data['address']);
+            $stmt->bindParam(':featured', $data['featured'], PDO::PARAM_INT);
+            $stmt->bindParam(':status', $data['status']);
+            
+            if (!empty($data['image'])) {
+                $stmt->bindParam(':image', $data['image']);
+            }
+            
+            return $stmt->execute();
+            
+        } catch (PDOException $e) {
+            error_log("Update property error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
