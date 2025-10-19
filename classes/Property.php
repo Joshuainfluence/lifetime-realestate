@@ -560,4 +560,33 @@ class Property
         }
     }
 
+
+     /**
+     * Update Property Status
+     * 
+     * Changes property status (available, sold, rented)
+     * 
+     * @param int $id Property ID
+     * @param string $status New status
+     * @return bool True on success, false on failure
+     */
+    public function updateStatus($id, $status) {
+        try {
+            $allowedStatuses = ['available', 'sold', 'rented'];
+            if (!in_array($status, $allowedStatuses)) {
+                return false;
+            }
+            
+            $query = "UPDATE {$this->table} SET status = :status WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':status', $status);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Update status error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
 }
