@@ -349,4 +349,10 @@ class Property
             return false;
         }
     }
+
+    // get featured properties
+    public function getFeatured($limit = 6){
+        $filters = ['featured' => 1, 'status' => 'available'];
+        return $this->getAll($filters, $limit, 0, 'created_at', 'DESC');
+    }
 }
