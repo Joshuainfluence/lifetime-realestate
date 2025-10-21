@@ -24,7 +24,7 @@ header {
   border: 0px solid red;
   display: flex;
   justify-content: center;
-  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3);
+  /* box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3); */
   position: fixed;
   background: transparent;
   backdrop-filter: blur(1rem);
@@ -288,7 +288,7 @@ header {
   height: 10vh;
   display: flex;
   justify-content: center;
-  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1); */
   position: fixed; /* Fixed to top */
   top: 0;
   background: rgba(255, 255, 255, 0.95);
