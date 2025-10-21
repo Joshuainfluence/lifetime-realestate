@@ -9,21 +9,21 @@
 
 // Include necessary files
 require_once 'config/database.php';
-// require_once 'classes/Property.php';
+require_once 'classes/Property.php';
 require_once 'classes/Category.php';
 
 // Initialize classes
-// $property = new Property();
+$property = new Property();
 $category = new Category();
 
 // Get featured properties (limit to 6 for display)
-// $featuredProperties = $property->getFeatured(6);
+$featuredProperties = $property->getFeatured(6);
 
 // Get all categories for display
 $categories = $category->getAll();
 
 // Get latest properties for pricing section
-// $latestProperties = $property->getAll([], 3, 0);
+$latestProperties = $property->getAll([], 3, 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -250,6 +250,12 @@ $categories = $category->getAll();
         </div>
     </section>
 
+
+
+
+
+    
+
     <!-- 
         CATEGORIES SECTION
         Display property categories with icons
@@ -269,6 +275,105 @@ $categories = $category->getAll();
     </section>
 
     
+
+
+
+
+<!-- 
+        PROPERTIES/PRICING SECTION
+        Display latest or featured properties
+    -->
+    <section id="pricing">
+        <h1 class="section-title">Featured Properties</h1>
+        <div class="properties-container">
+            <?php if (!empty($featuredProperties)): ?>
+                <?php foreach ($featuredProperties as $prop): ?>
+                    <!-- Property Card -->
+                    <div class="col property-card">
+                        <!-- Property Image -->
+                        <div class="priceimage" style="background-image: url('<?php echo !empty($prop['image']) ? 'assets/uploads/properties/' . $prop['image'] : 'img/default-property.jpg'; ?>');">
+                            <!-- Property Type Badge -->
+                            <span class="property-badge <?php echo $prop['property_type']; ?>">
+                                For <?php echo ucfirst($prop['property_type']); ?>
+                            </span>
+                        </div>
+
+                        <!-- Property Details -->
+                        <div class="property-content">
+                            <!-- Property Title -->
+                            <h3><?php echo htmlspecialchars($prop['title']); ?></h3>
+
+                            <!-- Category -->
+                            <p class="category">
+                                <i class="fas fa-tag"></i> 
+                                <?php echo htmlspecialchars($prop['category_name']); ?>
+                            </p>
+
+                            <!-- Location -->
+                            <p class="location">
+                                <i class="fas fa-map-marker-alt"></i> 
+                                <?php echo htmlspecialchars($prop['location']); ?>
+                            </p>
+
+                            <!-- Property Features -->
+                            <div class="property-features">
+                                <?php if ($prop['bedrooms']): ?>
+                                    <span><i class="fas fa-bed"></i> <?php echo $prop['bedrooms']; ?> Beds</span>
+                                <?php endif; ?>
+                                
+                                <?php if ($prop['bathrooms']): ?>
+                                    <span><i class="fas fa-bath"></i> <?php echo $prop['bathrooms']; ?> Baths</span>
+                                <?php endif; ?>
+                                
+                                <?php if ($prop['area']): ?>
+                                    <span><i class="fas fa-ruler-combined"></i> <?php echo $prop['area']; ?> m²</span>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Price -->
+                            <p class="price">
+                                $<?php echo number_format($prop['price'], 2); ?>
+                            </p>
+
+                            <!-- Description Preview -->
+                            <div class="details">
+                                <?php 
+                                // Show first 100 characters of description
+                                echo htmlspecialchars(substr($prop['description'], 0, 100)); 
+                                echo strlen($prop['description']) > 100 ? '...' : ''; 
+                                ?>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="buttons">
+                                <a href="property-detail.php?id=<?php echo $prop['id']; ?>" class="btn-view">
+                                    View Details
+                                </a>
+                                <?php if (isLoggedIn()): ?>
+                                    <!-- Favorite button for logged-in users -->
+                                    <a href="add-favorite.php?id=<?php echo $prop['id']; ?>" class="btn-favorite">
+                                        <i class="fa fa-heart"></i>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- No properties available message -->
+                <div class="no-properties">
+                    <i class="fas fa-home"></i>
+                    <p>No properties available at the moment. Check back soon!</p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- View All Properties Button -->
+        <div class="view-all">
+            <a href="properties.php" class="btn-primary">View All Properties</a>
+        </div>
+    </section>
+
 
     <!-- 
         TESTIMONIALS SECTION (Optional)
